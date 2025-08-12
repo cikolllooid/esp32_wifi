@@ -33,7 +33,7 @@ ESP32 отвечает за дополнительные функции, вкл�
 
 ## 📂 Основной проект
 Полное описание и схема работы находятся в репозитории STM32-версии:  
-[Flipper Zero Alternative (STM32 Version)](https://github.com/username/flipper-zero-alternative-stm32)  
+[Flipper Zero Alternative (STM32 Version)](https://github.com/cikolllooid/Flipper-zero-alternative)  
 
 ---
 
