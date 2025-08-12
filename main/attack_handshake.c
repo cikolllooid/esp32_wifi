@@ -20,6 +20,7 @@
 #include "wifi_controller.h"
 #include "frame_analyzer.h"
 #include "pcap_serializer.h"
+#include "hccapx_serializer.h"
 
 static const char *TAG = "main:attack_handshake";
 static const wifi_ap_record_t *ap_record = NULL;
@@ -38,15 +39,18 @@ static const wifi_ap_record_t *ap_record = NULL;
 static void eapolkey_frame_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     ESP_LOGI(TAG, "Got EAPoL-Key frame");
     ESP_LOGD(TAG, "Processing handshake frame...");
+    
     wifi_promiscuous_pkt_t *frame = (wifi_promiscuous_pkt_t *) event_data;
     attack_append_status_content(frame->payload, frame->rx_ctrl.sig_len);
     pcap_serializer_append_frame(frame->payload, frame->rx_ctrl.sig_len, frame->rx_ctrl.timestamp);
+    hccapx_serializer_add_frame((data_frame_t *) frame->payload);
 }
 
 void attack_handshake_start(attack_config_t *attack_config){
     ESP_LOGI(TAG, "Starting handshake attack...");
     ap_record = attack_config->ap_record;
     pcap_serializer_init();
+    hccapx_serializer_init(ap_record->ssid, strlen((char *)ap_record->ssid));
     wifictl_sniffer_filter_frame_types(true, false, false);
     wifictl_sniffer_start(ap_record->primary);
     frame_analyzer_capture_start(SEARCH_HANDSHAKE, ap_record->bssid);
@@ -57,7 +61,8 @@ void attack_handshake_start(attack_config_t *attack_config){
 void attack_handshake_stop(){
     wifictl_sniffer_stop();
     frame_analyzer_capture_stop();
+    pcap_serializer_deinit();
     ESP_ERROR_CHECK(esp_event_handler_unregister(ESP_EVENT_ANY_BASE, ESP_EVENT_ANY_ID, &eapolkey_frame_handler));
     ap_record = NULL;
-    ESP_LOGD(TAG, "Handshake attack stopped");
+    ESP_LOGI(TAG, "Handshake attack stopped");
 }

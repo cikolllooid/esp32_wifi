@@ -130,7 +130,7 @@ extern "C" {
 #define HID_KEY_RIGHT_GUI      231  // Keyboard RightGUI
 typedef uint8_t keyboard_cmd_t;
 
-// HID Consumer Usage IDs (subset of the codes available in the USB HID Usage Tables spec)
+// // HID Consumer Usage IDs (subset of the codes available in the USB HID Usage Tables spec)
 #define HID_CONSUMER_POWER          48  // Power
 #define HID_CONSUMER_RESET          49  // Reset
 #define HID_CONSUMER_SLEEP          50  // Sleep

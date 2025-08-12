@@ -53,18 +53,18 @@ static void data_frame_handler(void *args, esp_event_base_t event_base, int32_t 
         return;
     }
 
-    if(search_type == SEARCH_HANDSHAKE){
-        // TODO handle timeouts properly by e.g. for cycle
-        ESP_ERROR_CHECK_WITHOUT_ABORT(esp_event_post(FRAME_ANALYZER_EVENTS, DATA_FRAME_EVENT_EAPOLKEY_FRAME, frame, sizeof(wifi_promiscuous_pkt_t) + frame->rx_ctrl.sig_len, portMAX_DELAY));
-        return;
-    }
+    if (search_type == SEARCH_HANDSHAKE) {
+        const int max_retries = 5;
+        const TickType_t retry_delay = pdMS_TO_TICKS(100); // 100 мс
 
-    if(search_type == SEARCH_PMKID){
-        pmkid_item_t *pmkid_items;
-        if((pmkid_items = parse_pmkid(eapol_key_packet)) == NULL){
-            return;
+        for (int i = 0; i < max_retries; i++) {
+            esp_err_t err = esp_event_post(FRAME_ANALYZER_EVENTS, DATA_FRAME_EVENT_EAPOLKEY_FRAME,
+                                        frame, sizeof(wifi_promiscuous_pkt_t) + frame->rx_ctrl.sig_len, portMAX_DELAY);
+            if (err == ESP_OK) {
+                break; // успешно отправили, выходим
+            }
+            vTaskDelay(retry_delay); // ждем перед повтором
         }
-        ESP_ERROR_CHECK(esp_event_post(FRAME_ANALYZER_EVENTS, DATA_FRAME_EVENT_PMKID, &pmkid_items, sizeof(pmkid_item_t *), portMAX_DELAY));
         return;
     }
 }

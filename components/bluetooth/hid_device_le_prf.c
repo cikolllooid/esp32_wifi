@@ -556,31 +556,6 @@ esp_err_t hidd_register_cb(void)
 	return status;
 }
 
-void hidd_set_attr_value(uint16_t handle, uint16_t val_len, const uint8_t *value)
-{
-    hidd_inst_t *hidd_inst = &hidd_le_env.hidd_inst;
-    if(hidd_inst->att_tbl[HIDD_LE_IDX_HID_INFO_VAL] <= handle &&
-        hidd_inst->att_tbl[HIDD_LE_IDX_REPORT_REP_REF] >= handle) {
-        esp_ble_gatts_set_attr_value(handle, val_len, value);
-    } else {
-        ESP_LOGE(HID_LE_PRF_TAG, "%s error:Invalid handle value.",__func__);
-    }
-    return;
-}
-
-void hidd_get_attr_value(uint16_t handle, uint16_t *length, uint8_t **value)
-{
-    hidd_inst_t *hidd_inst = &hidd_le_env.hidd_inst;
-    if(hidd_inst->att_tbl[HIDD_LE_IDX_HID_INFO_VAL] <= handle &&
-        hidd_inst->att_tbl[HIDD_LE_IDX_REPORT_REP_REF] >= handle){
-        esp_ble_gatts_get_attr_value(handle, length, (const uint8_t **)value);
-    } else {
-        ESP_LOGE(HID_LE_PRF_TAG, "%s error:Invalid handle value.", __func__);
-    }
-
-    return;
-}
-
 static void hid_add_id_tbl(void)
 {
       // Key input report

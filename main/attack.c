@@ -18,12 +18,10 @@
 #include "esp_event.h"
 #include "esp_timer.h"
 
-#include "attack_pmkid.h"
 #include "attack_handshake.h"
 #include "attack_dos.h"
-#include "webserver.h"  // Подключаем сюда webserver.h, чтобы использовать attack_request_t
+#include "webserver.h" 
 #include "wifi_controller.h"
-#include "spam_attack.h"
 #include "ble_hidd_demo.h"
 
 static const char* TAG = "attack";
@@ -47,6 +45,8 @@ void attack_append_status_content(uint8_t *buffer, unsigned size){
         ESP_LOGE(TAG, "Size can't be 0 if you want to reallocate");
         return;
     }
+    ESP_LOGI(TAG, "Appending %u bytes to content (current size: %u)", size, attack_status.content_size);
+
     // temporarily save new location in case of realloc failure to preserve current content
     char *reallocated_content = realloc(attack_status.content, attack_status.content_size + size);
     if(reallocated_content == NULL){
@@ -57,12 +57,6 @@ void attack_append_status_content(uint8_t *buffer, unsigned size){
     memcpy(&reallocated_content[attack_status.content_size], buffer, size);
     attack_status.content = reallocated_content;
     attack_status.content_size += size;
-}
-
-char *attack_alloc_result_content(unsigned size) {
-    attack_status.content_size = size;
-    attack_status.content = (char *) malloc(size);
-    return attack_status.content;
 }
 
 static void attack_reset_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
@@ -81,10 +75,6 @@ void attack_timeout(void* arg){
     attack_update_status(TIMEOUT);
 
     switch(attack_status.type) {
-        case ATTACK_TYPE_PMKID:
-            ESP_LOGI(TAG, "Aborting PMKID attack...");
-            attack_pmkid_stop();
-            break;
         case ATTACK_TYPE_HANDSHAKE:
             ESP_LOGI(TAG, "Abort HANDSHAKE attack...");
             attack_handshake_stop();
@@ -96,12 +86,6 @@ void attack_timeout(void* arg){
         default:
             ESP_LOGE(TAG, "Unknown attack type. Not aborting anything");
     }
-}
-
-static void attack_pmkid_task(void *param) {
-    attack_config_t *config = (attack_config_t *)param;
-    attack_pmkid_start(config);
-    vTaskDelete(NULL);
 }
 
 static void attack_handshake_task(void *param) {
@@ -134,14 +118,11 @@ void attack_request_handler(void *args, esp_event_base_t event_base, int32_t eve
     ESP_ERROR_CHECK(esp_timer_start_once(attack_timeout_handle, attack_config.timeout * 1000000));
 
     switch(attack_config.type) {
-        case ATTACK_TYPE_PMKID:
-            xTaskCreate(attack_pmkid_task, "PMKID Task", 4096, &attack_config, 5, NULL);
-            break;
         case ATTACK_TYPE_HANDSHAKE:
-            xTaskCreate(attack_handshake_task, "Handshake Task", 4096, &attack_config, 5, NULL);
+            xTaskCreate(attack_handshake_task, "Handshake task", 8192, &attack_config, 5, NULL);
             break;
         case ATTACK_TYPE_DOS:
-            xTaskCreate(attack_dos_task, "DOS Task", 4096, &attack_config, 5, NULL);
+            xTaskCreate(attack_dos_task, "DOS task", 8192, &attack_config, 5, NULL);
             break;
         default:
             ESP_LOGE(TAG, "Unknown attack type!");

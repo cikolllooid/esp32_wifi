@@ -11,10 +11,6 @@
 #include "esp_gatt_defs.h"
 #include "esp_err.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef enum {
     ESP_HIDD_EVENT_REG_FINISH = 0,
     ESP_BAT_EVENT_REG,
@@ -116,6 +112,8 @@ typedef union {
  */
 typedef void (*esp_hidd_event_cb_t) (esp_hidd_cb_event_t event, esp_hidd_cb_param_t *param);
 
+
+
 /**
  *
  * @brief           This function is called to receive hid device callback event
@@ -158,8 +156,6 @@ void esp_hidd_send_consumer_value(uint16_t conn_id, uint8_t key_cmd, bool key_pr
 
 void esp_hidd_send_keyboard_value(uint16_t conn_id, key_mask_t special_key_mask, uint8_t *keyboard_cmd, uint8_t num_key, uint8_t num_spec);
 
-#ifdef __cplusplus
-}
-#endif
+
 
 #endif /* __ESP_HIDD_API_H__ */
